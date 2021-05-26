@@ -1,13 +1,17 @@
 'use strict';
 
+const funcOrThrow = func => {
+  if( typeof func !== 'function') throw new Error('Must be a function');
+}
+
 class CancelablePromise {
-  constructor(callback, promise = null, isCanceled = false, parent) {
-    if (typeof callback !== 'function') throw new Error();
+  constructor(executor, promise = null, isCanceled = false, parent = null) {
+    funcOrThrow(executor);
     this.isCanceled = isCanceled;
     this.promise =
       promise ??
       new Promise((res, rej) => {
-        callback((val) => {
+        executor((val) => {
           if (this.isCanceled) rej(this);
           res(val);
         }, rej);
@@ -15,17 +19,21 @@ class CancelablePromise {
     this.parent = parent;
   }
 
+  _next(promise) {
+    return new CancelablePromise(() => {}, promise, this.isCanceled, this);
+  }
+
   then(onResult = (res) => res, onError) {
-    if (typeof onResult !== 'function') throw new Error();
-    const {promise, isCanceled} = this;
-    const newPromise = promise.then(onResult, onError).catch(onError); // It's weird, but your tests require it. // Promise.reject return new Promise !!! //65 line
-    return new CancelablePromise(() => {}, newPromise, isCanceled, this);
+    funcOrThrow(onResult);
+    const { promise } = this;
+    const newPromise = promise.then(onResult, onError).catch(onError); // "catch" is weird, but your tests require it. // Promise.reject return new Promise !!! //65 line
+    return this._next(newPromise)
   }
 
   catch(onError) {
-    if (typeof onError !== 'function') throw new Error();
-    const {promise, isCanceled} = this;
-    return new CancelablePromise(() => {}, promise.catch(onError), isCanceled, this);
+    funcOrThrow(onError);
+    const {promise} = this;
+    return this._next(promise);
   }
 
   cancel() {
