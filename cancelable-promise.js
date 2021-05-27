@@ -26,7 +26,7 @@ class CancelablePromise {
   then(onResult = (res) => res, onError) {
     funcOrThrow(onResult);
     const { promise } = this;
-    const newPromise = promise.then(onResult, onError).catch(onError); // "catch" is weird, but your tests require it. // Promise.reject return new Promise !!! //65 line
+    const newPromise = promise.then(onResult, onError).catch(onError); // "catch" is weird, but your tests require it. // Promise.reject return new Promise !!! //59 line
     return this._next(newPromise)
   }
 
