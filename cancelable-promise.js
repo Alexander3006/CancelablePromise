@@ -6,7 +6,7 @@ const funcOrThrow = func => {
 
 class CancelablePromise {
   constructor(executor, promise = null, isCanceled = false, parent = null) {
-    funcOrThrow(executor);
+    if (!promise) funcOrThrow(executor);
     this.isCanceled = isCanceled;
     this.promise =
       promise ??
